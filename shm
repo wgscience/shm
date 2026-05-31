@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Angular Velocity vs. Angular Frequency</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons for premium feel -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col overflow-x-hidden selection:bg-indigo-500/30 selection:text-indigo-200">
+
+    <!-- Header -->
+    <header class="border-b border-slate-800 bg-slate-900/50 backdrop-blur-md sticky top-0 z-50 px-4 py-3 sm:px-6">
+        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <div class="p-2 bg-indigo-500/10 rounded-lg border border-indigo-500/30 text-indigo-400">
+                    <i data-lucide="orbit" class="w-6 h-6 animate-spin" style="animation-duration: 10s;"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-tight bg-gradient-to-r from-white via-indigo-200 to-cyan-300 bg-clip-text text-transparent">
+                        Angular Velocity &amp; Frequency Link
+                    </h1>
+                    <p class="text-xs text-slate-400">Projecting circular motion into simple harmonic oscillation</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 text-xs bg-slate-800/60 px-3 py-1.5 rounded-full border border-slate-700/50">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span class="text-slate-300 font-medium">Interactive Sandbox</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 py-6 sm:px-6 flex flex-col lg:flex-row gap-6">
+        
+        <!-- Left Side: Interactive Canvas and Real-time Readouts -->
+        <div class="flex-1 flex flex-col gap-4 min-w-0">
+            <!-- Canvas Card -->
+            <div class="bg-slate-900/80 rounded-2xl border border-slate-800 p-4 flex flex-col relative overflow-hidden shadow-2xl shadow-indigo-950/20">
+                <!-- Mathematical formula overlay -->
+                <div class="absolute top-6 left-6 z-10 bg-slate-950/80 backdrop-blur-sm border border-slate-800 rounded-lg px-3 py-2 text-xs flex flex-col gap-1 pointer-events-none select-none">
+                    <div class="text-slate-400 font-semibold uppercase tracking-wider text-[10px]">Circular Parameter</div>
+                    <div class="text-cyan-400 font-semibold mono">Angular Velocity (ω) = dθ/dt</div>
+                    <div class="text-slate-400 mt-1 font-semibold uppercase tracking-wider text-[10px]">Oscillation Parameter</div>
+                    <div class="text-rose-400 font-semibold mono">Angular Frequency (ω) = 2π/T = 2πf</div>
+                </div>
+
+                <div class="absolute top-6 right-6 z-10 bg-slate-950/80 backdrop-blur-sm border border-slate-800 rounded-lg px-3 py-2 text-xs flex flex-col gap-1 pointer-events-none select-none">
+                    <div class="text-slate-400 font-semibold uppercase tracking-wider text-[10px]">Instantaneous Position</div>
+                    <div class="text-indigo-400 font-semibold mono">y(t) = A · sin(ωt + φ)</div>
+                </div>
+
+                <!-- Canvas Wrapper -->
+                <div class="w-full relative aspect-[16/9] min-h-[300px] sm:min-h-[400px] bg-slate-950 rounded-xl border border-slate-800/80">
+                    <canvas id="simCanvas" class="w-full h-full block cursor-crosshair"></canvas>
+                </div>
+
+                <!-- Live Status Metrics Bar -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4">
+                    <div class="bg-slate-950/50 p-3 rounded-xl border border-slate-800/60">
+                        <span class="text-[10px] text-slate-500 block uppercase font-bold tracking-wider">Angle (θ)</span>
+                        <span id="metric-angle" class="text-lg font-semibold text-cyan-400 mono">0.00 rad</span>
+                        <span id="metric-angle-deg" class="text-xs text-slate-400 block">0.0°</span>
+                    </div>
+                    <div class="bg-slate-950/50 p-3 rounded-xl border border-slate-800/60">
+                        <span class="text-[10px] text-slate-500 block uppercase font-bold tracking-wider">Angular Velocity (ω)</span>
+                        <span id="metric-omega" class="text-lg font-semibold text-emerald-400 mono">1.50 rad/s</span>
+                        <span id="metric-frequency" class="text-xs text-slate-400 block">0.24 Hz (cycles/sec)</span>
+                    </div>
+                    <div class="bg-slate-950/50 p-3 rounded-xl border border-slate-800/60">
+                        <span class="text-[10px] text-slate-500 block uppercase font-bold tracking-wider">Time Period (T)</span>
+                        <span id="metric-period" class="text-lg font-semibold text-rose-400 mono">4.19 s</span>
+                        <span class="text-xs text-slate-400 block">Time for 1 full cycle</span>
+                    </div>
+                    <div class="bg-slate-950/50 p-3 rounded-xl border border-slate-800/60">
+                        <span class="text-[10px] text-slate-500 block uppercase font-bold tracking-wider">Displacement (y)</span>
+                        <span id="metric-y" class="text-lg font-semibold text-violet-400 mono">0.00</span>
+                        <span id="metric-y-pct" class="text-xs text-slate-400 block">0% of amplitude</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Controls Panel -->
+            <div class="bg-slate-900/80 rounded-2xl border border-slate-800 p-5 shadow-lg">
+                <div class="flex flex-wrap items-center justify-between gap-4 mb-5 pb-4 border-b border-slate-800">
+                    <div class="flex items-center gap-2">
+                        <button id="btn-play" class="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white font-semibold rounded-lg text-sm transition-all shadow-lg shadow-indigo-600/20">
+                            <i data-lucide="pause" class="w-4 h-4" id="play-icon"></i>
+                            <span id="play-text">Pause Simulation</span>
+                        </button>
+                        <button id="btn-step" class="p-2 bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-300 rounded-lg transition-all" title="Step Frame Forward">
+                            <i data-lucide="skip-forward" class="w-4 h-4"></i>
+                        </button>
+                        <button id="btn-reset" class="p-2 bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-300 rounded-lg transition-all" title="Reset Time to Zero">
+                            <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="flex items-center gap-4">
+                        <label class="flex items-center gap-2 text-xs text-slate-400 cursor-pointer">
+                            <input type="checkbox" id="chk-grid" checked class="rounded border-slate-700 text-indigo-600 bg-slate-950 focus:ring-0 focus:ring-offset-0">
+                            Show Grid
+                        </label>
+                        <label class="flex items-center gap-2 text-xs text-slate-400 cursor-pointer">
+                            <input type="checkbox" id="chk-vectors" checked class="rounded border-slate-700 text-indigo-600 bg-slate-950 focus:ring-0 focus:ring-offset-0">
+                            Show Components
+                        </label>
+                        <label class="flex items-center gap-2 text-xs text-slate-400 cursor-pointer">
+                            <input type="checkbox" id="chk-trace" checked class="rounded border-slate-700 text-indigo-600 bg-slate-950 focus:ring-0 focus:ring-offset-0">
+                            Show Sine Trace
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Sliders Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Angular Velocity Slider -->
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between">
+                            <label for="slide-omega" class="text-xs font-semibold text-emerald-400 flex items-center gap-1.5">
+                                <i data-lucide="gauge" class="w-3.5 h-3.5"></i>
+                                Angular Speed (ω)
+                            </label>
+                            <span id="val-omega" class="text-xs mono font-bold bg-emerald-500/10 text-emerald-300 px-2 py-0.5 rounded border border-emerald-500/20">1.50 rad/s</span>
+                        </div>
+                        <input type="range" id="slide-omega" min="-5.0" max="5.0" step="0.1" value="1.5" class="w-full accent-emerald-500 bg-slate-950 h-2 rounded-lg cursor-pointer">
+                        <p class="text-[10px] text-slate-400">Controls rotation speed &amp; wave oscillation rate.</p>
+                    </div>
+
+                    <!-- Amplitude Slider -->
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between">
+                            <label for="slide-amp" class="text-xs font-semibold text-indigo-400 flex items-center gap-1.5">
+                                <i data-lucide="expand" class="w-3.5 h-3.5"></i>
+                                Amplitude (A)
+                            </label>
+                            <span id="val-amp" class="text-xs mono font-bold bg-indigo-500/10 text-indigo-300 px-2 py-0.5 rounded border border-indigo-500/20">1.00</span>
+                        </div>
+                        <input type="range" id="slide-amp" min="0.2" max="1.5" step="0.05" value="1.0" class="w-full accent-indigo-500 bg-slate-950 h-2 rounded-lg cursor-pointer">
+                        <p class="text-[10px] text-slate-400">Determines circle radius and maximum wave peak height.</p>
+                    </div>
+
+                    <!-- Phase Offset Slider -->
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between">
+                            <label for="slide-phase" class="text-xs font-semibold text-amber-400 flex items-center gap-1.5">
+                                <i data-lucide="git-commit" class="w-3.5 h-3.5"></i>
+                                Initial Phase (φ)
+                            </label>
+                            <span id="val-phase" class="text-xs mono font-bold bg-amber-500/10 text-amber-300 px-2 py-0.5 rounded border border-amber-500/20">0.00 rad</span>
+                        </div>
+                        <input type="range" id="slide-phase" min="0" max="6.28" step="0.05" value="0.0" class="w-full accent-amber-500 bg-slate-950 h-2 rounded-lg cursor-pointer">
+                        <p class="text-[10px] text-slate-400">Shifts the starting rotation position on the circle.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Side: Educational Information Panel -->
+        <div class="w-full lg:w-96 flex flex-col gap-6 shrink-0">
+            <!-- Explanation Card -->
+            <div class="bg-slate-900/80 rounded-2xl border border-slate-800 p-6 shadow-lg flex-1 flex flex-col justify-between">
+                <div>
+                    <h2 class="text-lg font-bold text-white flex items-center gap-2 mb-3">
+                        <i data-lucide="info" class="text-indigo-400 w-5 h-5"></i>
+                        The Equivalence Link
+                    </h2>
+                    
+                    <div class="prose prose-invert prose-sm text-slate-300 space-y-4 text-xs leading-relaxed">
+                        <p>
+                            Why do we use the same symbol (<strong class="text-indigo-400">ω</strong>) and unit (<strong class="text-indigo-400">rad/s</strong>) for two seemingly different physical processes?
+                        </p>
+                        
+                        <div class="p-3 bg-slate-950 border border-slate-800 rounded-xl space-y-2">
+                            <h3 class="font-semibold text-cyan-400 flex items-center gap-1.5">
+                                <span class="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
+                                1. Circular Motion: Angular Velocity
+                            </h3>
+                            <p class="text-[11px] text-slate-400">
+                                When an object sweeps around a circle, its rotational speed is measured as the change in angle per second. 
+                            </p>
+                            <div class="text-xs text-cyan-300 font-mono text-center py-1">
+                                ω = Δθ / Δt
+                            </div>
+                        </div>
+
+                        <div class="p-3 bg-slate-950 border border-slate-800 rounded-xl space-y-2">
+                            <h3 class="font-semibold text-rose-400 flex items-center gap-1.5">
+                                <span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span>
+                                2. Linear Oscillation: Angular Frequency
+                            </h3>
+                            <p class="text-[11px] text-slate-400">
+                                If you track <em>only</em> the height of that rotating point, it bounces up and down. This motion is <strong>Simple Harmonic Motion</strong>.
+                            </p>
+                            <div class="text-xs text-rose-300 font-mono text-center py-1">
+                                y(t) = A · sin(ωt)
+                            </div>
+                        </div>
+
+                        <p class="text-[11px] leading-relaxed text-slate-400">
+                            The rate at which the oscillator moves through its <strong>phase cycle</strong> (one full cycle = $2\pi$ radians) exactly matches the speed at which the point circles the perimeter. Hence, <strong class="text-white">angular velocity translates directly into angular frequency</strong>.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="mt-6 pt-4 border-t border-slate-800/80">
+                    <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Try this experiment:</h3>
+                    <ul class="space-y-2 text-[11px] text-slate-300">
+                        <li class="flex gap-2">
+                            <span class="text-indigo-400 font-bold">1.</span>
+                            <span>Set <strong>ω to 3.14 rad/s</strong> (approx. $\pi$). Notice that the point completes exactly one half-turn per second, and the wave tracks 0.5 Hz.</span>
+                        </li>
+                        <li class="flex gap-2">
+                            <span class="text-indigo-400 font-bold">2.</span>
+                            <span>Change the <strong>Amplitude (A)</strong>. Watch how both the circle's size and the wave's peaks increase, while the frequency stays completely unchanged.</span>
+                        </li>
+                        <li class="flex gap-2">
+                            <span class="text-indigo-400 font-bold">3.</span>
+                            <span>Slide <strong>ω below zero</strong>. The point rotates clockwise (negative angular velocity) and you can observe how the wave phase shifts reversed.</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="mt-auto border-t border-slate-900 bg-slate-950 py-4 text-center text-xs text-slate-500">
+        <p>© 2026 Interactive Physics Lab. Created to visualize mechanical physics and kinematics.</p>
+    </footer>
+
+    <!-- Interactive JS Application -->
+    <script>
+        // Setup state variables
+        let isPlaying = true;
+        let omega = 1.5; // rad/s
+        let amplitude = 1.0; // multiplier
+        let phase = 0.0; // rad
+        let currentTime = 0.0;
+        let lastTimestamp = 0;
+        
+        let showGrid = true;
+        let showVectors = true;
+        let showTrace = true;
+
+        // Colors
+        const COLORS = {
+            bg: '#020617', // slate-950
+            grid: '#1e293b', // slate-800
+            axis: '#475569', // slate-600
+            circle: '#38bdf8', // sky-400 (angular velocity side)
+            oscillator: '#fb7185', // rose-400 (angular frequency side)
+            vectorX: '#a78bfa', // violet-400
+            vectorY: '#fb923c', // orange-400
+            connector: '#64748b', // slate-500
+            activeTrack: '#818cf8', // indigo-400
+        };
+
+        // DOM elements
+        const canvas = document.getElementById('simCanvas');
+        const ctx = canvas.getContext('2d');
+        const playBtn = document.getElementById('btn-play');
+        const stepBtn = document.getElementById('btn-step');
+        const resetBtn = document.getElementById('btn-reset');
+        const playIcon = document.getElementById('play-icon');
+        const playText = document.getElementById('play-text');
+
+        const omegaSlider = document.getElementById('slide-omega');
+        const ampSlider = document.getElementById('slide-amp');
+        const phaseSlider = document.getElementById('slide-phase');
+
+        const omegaVal = document.getElementById('val-omega');
+        const ampVal = document.getElementById('val-amp');
+        const phaseVal = document.getElementById('val-phase');
+
+        const metricAngle = document.getElementById('metric-angle');
+        const metricAngleDeg = document.getElementById('metric-angle-deg');
+        const metricOmega = document.getElementById('metric-omega');
+        const metricFrequency = document.getElementById('metric-frequency');
+        const metricPeriod = document.getElementById('metric-period');
+        const metricY = document.getElementById('metric-y');
+        const metricYPct = document.getElementById('metric-y-pct');
+
+        const chkGrid = document.getElementById('chk-grid');
+        const chkVectors = document.getElementById('chk-vectors');
+        const chkTrace = document.getElementById('chk-trace');
+
+        // Resize handler to maintain scale and resolution
+        function resizeCanvas() {
+            const dpr = window.devicePixelRatio || 1;
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            ctx.scale(dpr, dpr);
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        // Initialize layout sizes immediately
+        setTimeout(resizeCanvas, 50);
+
+        // Control handlers
+        playBtn.addEventListener('click', () => {
+            isPlaying = !isPlaying;
+            updatePlayButtonUI();
+        });
+
+        stepBtn.addEventListener('click', () => {
+            if (!isPlaying) {
+                currentTime += 0.05; // advance 50ms worth of phase
+                draw();
+                updateMetrics();
+            }
+        });
+
+        resetBtn.addEventListener('click', () => {
+            currentTime = 0;
+            draw();
+            updateMetrics();
+        });
+
+        function updatePlayButtonUI() {
+            if (isPlaying) {
+                playIcon.setAttribute('data-lucide', 'pause');
+                playText.textContent = "Pause Simulation";
+            } else {
+                playIcon.setAttribute('data-lucide', 'play');
+                playText.textContent = "Resume Simulation";
+            }
+            lucide.createIcons();
+        }
+
+        // Checkboxes
+        chkGrid.addEventListener('change', (e) => { showGrid = e.target.checked; draw(); });
+        chkVectors.addEventListener('change', (e) => { showVectors = e.target.checked; draw(); });
+        chkTrace.addEventListener('change', (e) => { showTrace = e.target.checked; draw(); });
+
+        // Sliders input
+        omegaSlider.addEventListener('input', (e) => {
+            omega = parseFloat(e.target.value);
+            omegaVal.textContent = `${omega.toFixed(2)} rad/s`;
+            updateMetrics();
+        });
+
+        ampSlider.addEventListener('input', (e) => {
+            amplitude = parseFloat(e.target.value);
+            ampVal.textContent = `${amplitude.toFixed(2)}`;
+            updateMetrics();
+        });
+
+        phaseSlider.addEventListener('input', (e) => {
+            phase = parseFloat(e.target.value);
+            phaseVal.textContent = `${phase.toFixed(2)} rad`;
+            updateMetrics();
+        });
+
+        function updateMetrics() {
+            const currentAngleRad = ((omega * currentTime) + phase) % (2 * Math.PI);
+            const wrappedAngle = currentAngleRad < 0 ? currentAngleRad + 2 * Math.PI : currentAngleRad;
+            const angleDeg = (wrappedAngle * 180 / Math.PI).toFixed(1);
+
+            metricAngle.textContent = `${wrappedAngle.toFixed(2)} rad`;
+            metricAngleDeg.textContent = `${angleDeg}°`;
+
+            metricOmega.textContent = `${omega.toFixed(2)} rad/s`;
+            
+            const frequencyHz = Math.abs(omega) / (2 * Math.PI);
+            metricFrequency.textContent = `${frequencyHz.toFixed(2)} Hz (cycles/s)`;
+
+            if (omega !== 0) {
+                const periodS = (2 * Math.PI) / Math.abs(omega);
+                metricPeriod.textContent = `${periodS.toFixed(2)} s`;
+            } else {
+                metricPeriod.textContent = `∞ s`;
+            }
+
+            const yPosVal = Math.sin(omega * currentTime + phase) * amplitude;
+            metricY.textContent = yPosVal.toFixed(2);
+            metricYPct.textContent = `${Math.round(Math.abs(yPosVal / 1.5) * 100)}% of max possible limit`;
+        }
+
+        // Animation Loop
+        function animate(timestamp) {
+            if (!lastTimestamp) lastTimestamp = timestamp;
+            const elapsed = (timestamp - lastTimestamp) / 1000; // in seconds
+            lastTimestamp = timestamp;
+
+            if (isPlaying) {
+                // To keep transition smooth without giant jumps when tabbing away:
+                if (elapsed < 0.2) {
+                    currentTime += elapsed;
+                }
+                updateMetrics();
+            }
+
+            draw();
+            requestAnimationFrame(animate);
+        }
+
+        // Draw Function
+        function draw() {
+            const w = canvas.width / (window.devicePixelRatio || 1);
+            const h = canvas.height / (window.devicePixelRatio || 1);
+
+            // Clear Background
+            ctx.fillStyle = COLORS.bg;
+            ctx.fillRect(0, 0, w, h);
+
+            if (w === 0 || h === 0) return;
+
+            // Geometry calculations based on responsive canvas width
+            const margin = 40;
+            const leftWidthRatio = 0.35; // portion of screen for Unit Circle
+            const rightWidthRatio = 0.50; // portion for scrolling Sine Trace
+            const middleWidthRatio = 0.15; // portion for the Vertical Oscillator
+
+            // Center heights
+            const centerY = h / 2;
+            
+            // Scaled Base Radius for circle
+            const baseRadius = Math.min(w * 0.15, h * 0.32);
+            const r = baseRadius * amplitude; // Dynamic radius based on Amplitude slider
+
+            // Center of Unit Circle
+            const circleCX = margin + (w * leftWidthRatio) / 2;
+            
+            // Center of vertical projection line
+            const oscX = margin + w * leftWidthRatio + (w * middleWidthRatio) / 2;
+
+            // Start of Sine plot
+            const plotStartX = oscX + 40;
+            const plotEndX = w - margin;
+            const plotWidth = plotEndX - plotStartX;
+
+            // Core physics values
+            const theta = omega * currentTime + phase;
+            const pointX = circleCX + r * Math.cos(theta);
+            const pointY = centerY - r * Math.sin(theta); // Subtract because Canvas Y axis goes down
+
+            // --- 1. Draw Grid Lines ---
+            if (showGrid) {
+                ctx.strokeStyle = COLORS.grid;
+                ctx.lineWidth = 1;
+
+                // Center baseline across entire canvas
+                ctx.beginPath();
+                ctx.moveTo(margin, centerY);
+                ctx.lineTo(w - margin, centerY);
+                ctx.stroke();
+
+                // Vertical symmetry line inside Unit Circle
+                ctx.beginPath();
+                ctx.moveTo(circleCX, centerY - baseRadius * 1.6);
+                ctx.lineTo(circleCX, centerY + baseRadius * 1.6);
+                ctx.stroke();
+
+                // Vertical guide line for Simple Harmonic Motion path
+                ctx.beginPath();
+                ctx.moveTo(oscX, centerY - baseRadius * 1.6);
+                ctx.lineTo(oscX, centerY + baseRadius * 1.6);
+                ctx.stroke();
+            }
+
+            // --- 2. Draw The Unit Circle Layout (Left) ---
+            
+            // Reference circle (max amplitude limits)
+            ctx.strokeStyle = 'rgba(71, 85, 105, 0.4)';
+            ctx.lineWidth = 1.5;
+            ctx.setLineDash([4, 4]);
+            ctx.beginPath();
+            ctx.arc(circleCX, centerY, baseRadius * 1.5, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.setLineDash([]); // clear dash
+
+            // Max boundary limit label
+            ctx.fillStyle = 'rgba(71, 85, 105, 0.7)';
+            ctx.font = '10px sans-serif';
+            ctx.fillText('+A Max limit', circleCX - baseRadius * 1.5, centerY - baseRadius * 1.5 - 6);
+
+            // Active boundary circle
+            ctx.strokeStyle = 'rgba(56, 189, 248, 0.3)'; // semi transparent sky
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(circleCX, centerY, r, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // Arc showing swept angle (theta)
+            if (r > 15) {
+                ctx.strokeStyle = COLORS.circle;
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                // Standard math: angles are counter-clockwise, canvas is clockwise. 
+                // We draw arc starting from 0, going to negative theta (which maps to counterclockwise visually).
+                ctx.arc(circleCX, centerY, Math.min(25, r * 0.3), 0, -theta, omega < 0);
+                ctx.stroke();
+            }
+
+            // Radial line (Phasor Vector)
+            ctx.strokeStyle = COLORS.circle;
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(circleCX, centerY);
+            ctx.lineTo(pointX, pointY);
+            ctx.stroke();
+
+            // Tangent Linear Velocity Vector component
+            if (showVectors && Math.abs(omega) > 0.01) {
+                // Velocity vector is perpendicular to position vector
+                const velLength = baseRadius * 0.4 * Math.abs(omega) / 2.5; 
+                const velAngle = theta + (omega > 0 ? Math.PI / 2 : -Math.PI / 2);
+                const velEndX = pointX + velLength * Math.cos(velAngle);
+                const velEndY = pointY - velLength * Math.sin(velAngle);
+
+                ctx.strokeStyle = '#10b981'; // emerald-500
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(pointX, pointY);
+                ctx.lineTo(velEndX, velEndY);
+                ctx.stroke();
+
+                // Draw arrow head
+                const arrowAngle = 0.4; // radians
+                ctx.fillStyle = '#10b981';
+                ctx.beginPath();
+                ctx.moveTo(velEndX, velEndY);
+                ctx.lineTo(
+                    velEndX - 6 * Math.cos(velAngle - arrowAngle),
+                    velEndY + 6 * Math.sin(velAngle - arrowAngle)
+                );
+                ctx.lineTo(
+                    velEndX - 6 * Math.cos(velAngle + arrowAngle),
+                    velEndY + 6 * Math.sin(velAngle + arrowAngle)
+                );
+                ctx.fill();
+            }
+
+            // Projection components (Visualizing horizontal and vertical breakdown)
+            if (showVectors) {
+                // X (cos) projection (bottom shadow line)
+                ctx.strokeStyle = 'rgba(167, 139, 250, 0.4)'; // violet
+                ctx.lineWidth = 1.5;
+                ctx.setLineDash([2, 2]);
+                ctx.beginPath();
+                ctx.moveTo(pointX, pointY);
+                ctx.lineTo(pointX, centerY);
+                ctx.stroke();
+                ctx.setLineDash([]);
+
+                // Y (sin) projection (left shadow line)
+                ctx.strokeStyle = 'rgba(251, 146, 60, 0.4)'; // orange
+                ctx.lineWidth = 1.5;
+                ctx.setLineDash([2, 2]);
+                ctx.beginPath();
+                ctx.moveTo(pointX, pointY);
+                ctx.lineTo(circleCX, pointY);
+                ctx.stroke();
+                ctx.setLineDash([]);
+
+                // Draw X vector line along axis
+                ctx.strokeStyle = COLORS.vectorX;
+                ctx.lineWidth = 2.5;
+                ctx.beginPath();
+                ctx.moveTo(circleCX, centerY);
+                ctx.lineTo(pointX, centerY);
+                ctx.stroke();
+
+                // Draw Y vector line along axis
+                ctx.strokeStyle = COLORS.vectorY;
+                ctx.lineWidth = 2.5;
+                ctx.beginPath();
+                ctx.moveTo(circleCX, centerY);
+                ctx.lineTo(circleCX, pointY);
+                ctx.stroke();
+            }
+
+            // The rotating point itself
+            ctx.fillStyle = COLORS.circle;
+            ctx.beginPath();
+            ctx.arc(pointX, pointY, 6, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+
+            // Label for current angle
+            ctx.fillStyle = COLORS.circle;
+            ctx.font = '11px sans-serif';
+            ctx.fillText("θ = ωt + φ", pointX + 10, pointY - 10);
+
+
+            // --- 3. Draw Vertical Projection & Harmonic Oscillator (Middle) ---
+            
+            // Draw axis markers for oscillation bounds
+            ctx.fillStyle = '#64748b';
+            ctx.fillText("+A", oscX + 15, centerY - r + 4);
+            ctx.fillText("-A", oscX + 15, centerY + r + 4);
+            ctx.fillText("0", oscX + 15, centerY + 4);
+
+            // Active vertical slot track
+            ctx.strokeStyle = 'rgba(251, 113, 133, 0.2)';
+            ctx.lineWidth = 8;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.moveTo(oscX, centerY - r);
+            ctx.lineTo(oscX, centerY + r);
+            ctx.stroke();
+            ctx.lineCap = 'butt'; // reset
+
+            // Spring visualization from top of frame to mass bob
+            const springTopY = centerY - baseRadius * 1.5;
+            const springBottomY = pointY;
+            const springCoils = 14;
+            const springWidth = 8;
+            
+            ctx.strokeStyle = 'rgba(148, 163, 184, 0.6)';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(oscX, springTopY);
+            
+            const totalSpringLength = springBottomY - springTopY;
+            const stepY = totalSpringLength / springCoils;
+            for (let i = 0; i <= springCoils; i++) {
+                const currentSpringY = springTopY + i * stepY;
+                let offsetSpringX = 0;
+                if (i > 0 && i < springCoils) {
+                    offsetSpringX = (i % 2 === 0 ? 1 : -1) * springWidth;
+                }
+                ctx.lineTo(oscX + offsetSpringX, currentSpringY);
+            }
+            ctx.stroke();
+
+            // The oscillating mass bob (exactly tracking the Y position)
+            ctx.fillStyle = COLORS.oscillator;
+            ctx.beginPath();
+            ctx.arc(oscX, pointY, 10, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+
+            // --- 4. Draw Horizontal Linkage Connector Lines ---
+            ctx.strokeStyle = COLORS.connector;
+            ctx.lineWidth = 1;
+            ctx.setLineDash([4, 6]);
+            
+            // Line from rotating point on unit circle to the simple harmonic oscillator bob
+            ctx.beginPath();
+            ctx.moveTo(pointX, pointY);
+            ctx.lineTo(oscX, pointY);
+            ctx.stroke();
+
+            // Line extending from the oscillator bob into the sine trace graph plot
+            ctx.beginPath();
+            ctx.moveTo(oscX, pointY);
+            ctx.lineTo(plotStartX, pointY);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+
+            // --- 5. Draw Scrolling Sine Wave Trace (Right) ---
+            if (showTrace && plotWidth > 0) {
+                // Plot boundaries box
+                ctx.strokeStyle = 'rgba(30, 41, 59, 0.5)';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(plotStartX, centerY - baseRadius * 1.5, plotWidth, baseRadius * 3);
+
+                // Math function plotting: y(x) = A * sin(wt - shift)
+                // We represent space on the horizontal axis as equivalent to past time.
+                // Scaler mapping: pixelWidth to time
+                const pixelsPerRad = plotWidth / (3.5 * Math.PI); // show approx ~1.75 cycles
+                
+                ctx.strokeStyle = COLORS.oscillator;
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+
+                let firstPoint = true;
+                for (let px = plotStartX; px <= plotEndX; px++) {
+                    const deltaX = px - plotStartX;
+                    // Equivalent phase shift offset backwards in time
+                    const tOffset = deltaX / pixelsPerRad;
+                    const thetaAtX = theta - tOffset; // travel backwards in phase as we move right
+                    
+                    const py = centerY - Math.sin(thetaAtX) * r;
+
+                    if (firstPoint) {
+                        ctx.moveTo(px, py);
+                        firstPoint = false;
+                    } else {
+                        ctx.lineTo(px, py);
+                    }
+                }
+                ctx.stroke();
+
+                // Draw a pulsing pointer node on the current wave head (at plotStartX)
+                ctx.fillStyle = COLORS.oscillator;
+                ctx.beginPath();
+                ctx.arc(plotStartX, pointY, 4, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Live formula visual labels right above the wave peak
+                ctx.fillStyle = '#94a3b8';
+                ctx.font = '10px monospace';
+                ctx.fillText("Sine Wave Path tracking: y = A·sin(θ)", plotStartX + 12, centerY - baseRadius * 1.5 + 16);
+            }
+
+            // Labels for columns
+            ctx.fillStyle = '#94a3b8';
+            ctx.font = 'bold 10px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText("ROTATION (ANGULAR VELOCITY)", circleCX, h - 10);
+            ctx.fillText("OSCILLATION (ANGULAR FREQUENCY)", oscX, h - 10);
+            ctx.fillText("WAVE PATTERN OVER TIME", plotStartX + plotWidth / 2, h - 10);
+            ctx.textAlign = 'left'; // reset
+        }
+
+        // Start animation after loading window resources
+        window.onload = function() {
+            lucide.createIcons();
+            updateMetrics();
+            requestAnimationFrame(animate);
+        };
+    </script>
+</body>
+</html>
